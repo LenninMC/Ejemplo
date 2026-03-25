@@ -1,6 +1,6 @@
 // Elementos del DOM
-const tempValor = document.getElementById('temp-valor');
-const tempBar = document.getElementById('temp-bar');
+const sensorValor = document.getElementById('sensor-valor');
+const sensorBar = document.getElementById('sensor-bar');
 const velocidadValor = document.getElementById('velocidad-valor');
 const motorBar = document.getElementById('motor-bar');
 const zonaActiva = document.getElementById('zona-activa');
@@ -14,20 +14,20 @@ const ultimaActualizacion = document.getElementById('ultima-actualizacion');
 
 // Nombres y acciones
 const nombresZonas = {
-    1: 'Temperatura Baja (< 20°C)',
-    2: 'Temperatura Media (20°C - 35°C)',
-    3: 'Temperatura Alta (> 35°C)'
+    1: 'FRÍO (683-1023)',
+    2: 'CALIENTE (342-682)',
+    3: 'MUY CALIENTE (0-341)'
 };
 
 const accionesMotor = {
-    1: 'Motor APAGADO (sin refrigeración)',
-    2: 'Motor a VELOCIDAD MEDIA (refrigeración moderada)',
-    3: 'Motor a VELOCIDAD MÁXIMA (refrigeración intensiva)'
+    1: 'Motor APAGADO',
+    2: 'Motor a VELOCIDAD MEDIA (170/255)',
+    3: 'Motor a VELOCIDAD MÁXIMA (255/255)'
 };
 
-// Límites de temperatura
-const LIMITE_ZONA_1 = 20;   // 20°C
-const LIMITE_ZONA_2 = 35;   // 35°C
+// Límites de zonas
+const LIMITE_ZONA_1 = 683;
+const LIMITE_ZONA_2 = 342;
 
 // Configuración de la gráfica
 const ctx = document.getElementById('mainChart').getContext('2d');
@@ -37,10 +37,10 @@ let chart = new Chart(ctx, {
         labels: [],
         datasets: [
             {
-                label: 'Temperatura (°C)',
+                label: 'Sensor KY-028',
                 data: [],
-                borderColor: '#ff6b6b',
-                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 borderWidth: 2,
                 pointRadius: 3,
                 pointHoverRadius: 5,
@@ -48,7 +48,7 @@ let chart = new Chart(ctx, {
                 fill: true
             },
             {
-                label: 'Límite Zona 1-2 (20°C)',
+                label: 'Límite Zona 1-2 (683)',
                 data: [],
                 borderColor: '#ffaa00',
                 borderWidth: 1,
@@ -58,7 +58,7 @@ let chart = new Chart(ctx, {
                 type: 'line'
             },
             {
-                label: 'Límite Zona 2-3 (35°C)',
+                label: 'Límite Zona 2-3 (342)',
                 data: [],
                 borderColor: '#ffaa00',
                 borderWidth: 1,
@@ -81,14 +81,14 @@ let chart = new Chart(ctx, {
                     label: function(context) {
                         let label = context.dataset.label || '';
                         let value = context.raw;
-                        if (label === 'Temperatura (°C)') {
+                        if (label === 'Sensor KY-028') {
                             let estado = '';
-                            if (value <= LIMITE_ZONA_1) estado = ' (Baja)';
-                            else if (value <= LIMITE_ZONA_2) estado = ' (Media)';
-                            else estado = ' (Alta)';
-                            return label + ': ' + value + '°C' + estado;
+                            if (value >= LIMITE_ZONA_1) estado = ' (FRÍO)';
+                            else if (value >= LIMITE_ZONA_2) estado = ' (CALIENTE)';
+                            else estado = ' (MUY CALIENTE)';
+                            return label + ': ' + value + estado;
                         }
-                        return label + ': ' + value + '°C';
+                        return label + ': ' + value;
                     }
                 }
             }
@@ -96,10 +96,10 @@ let chart = new Chart(ctx, {
         scales: {
             y: {
                 min: 0,
-                max: 50,
+                max: 1023,
                 grid: { color: 'rgba(255,255,255,0.1)' },
-                ticks: { color: '#8d9db0', stepSize: 10 },
-                title: { display: true, text: 'Temperatura (°C)', color: '#8d9db0' }
+                ticks: { color: '#8d9db0', stepSize: 200 },
+                title: { display: true, text: 'Valor sensor (0-1023)', color: '#8d9db0' }
             },
             x: {
                 grid: { display: false },
@@ -123,13 +123,13 @@ function actualizarZonas(zona) {
     accionMotor.textContent = accionesMotor[zona] || '---';
 }
 
-function updateChart(temperatura) {
+function updateChart(valor) {
     const ahora = new Date().toLocaleTimeString();
     
     chart.data.labels.push(ahora);
-    chart.data.datasets[0].data.push(temperatura);
-    chart.data.datasets[1].data.push(LIMITE_ZONA_1);  // Límite Zona 1-2 (20°C)
-    chart.data.datasets[2].data.push(LIMITE_ZONA_2);  // Límite Zona 2-3 (35°C)
+    chart.data.datasets[0].data.push(valor);
+    chart.data.datasets[1].data.push(LIMITE_ZONA_1);  // Límite 683
+    chart.data.datasets[2].data.push(LIMITE_ZONA_2);  // Límite 342
     
     // Mantener últimos 30 puntos
     if (chart.data.labels.length > 30) {
@@ -148,10 +148,10 @@ async function fetchEstado() {
         const j = await r.json();
         
         if (j.ok) {
-            // Actualizar sensor de temperatura
-            tempValor.textContent = j.temperatura.toFixed(1);
-            const porcentajeTemp = (j.temperatura / 100) * 100;
-            tempBar.style.width = `${Math.min(100, porcentajeTemp)}%`;
+            // Actualizar sensor
+            sensorValor.textContent = j.sensor;
+            const porcentaje = (j.sensor / 1023) * 100;
+            sensorBar.style.width = `${porcentaje}%`;
             
             // Actualizar motor
             velocidadValor.textContent = j.velocidad;
@@ -162,13 +162,13 @@ async function fetchEstado() {
             actualizarZonas(j.zona);
             
             // Actualizar gráfica
-            updateChart(j.temperatura);
+            updateChart(j.sensor);
             
             // Actualizar timestamp
             const ahora = new Date();
             ultimaActualizacion.textContent = `${ahora.toLocaleDateString()} ${ahora.toLocaleTimeString()}`;
             
-            console.log(`Temperatura: ${j.temperatura}°C, Zona: ${j.zona}, Velocidad: ${j.velocidad}`);
+            console.log(`Sensor: ${j.sensor}, Zona: ${j.zona}, Velocidad: ${j.velocidad}`);
         } else {
             console.error('Error en datos:', j.error);
         }
