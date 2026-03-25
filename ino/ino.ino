@@ -10,14 +10,10 @@ const int PIN_ENA = 5;  // PWM para velocidad
 // Pin para el sensor KY-028
 const int PIN_KY028 = A0;
 
-// Rangos definidos según valor analógico del KY-028
-// 0-341: MUY CALIENTE → Velocidad máxima
-// 342-682: CALIENTE → Velocidad media
-// 683-1023: FRÍO → Apagado
-
-const int ZONA_3_MAX = 341;     // Muy caliente
-const int ZONA_2_MAX = 682;     // Caliente
-// Zona 1: 683-1023 (Frío)
+// Rangos ajustados según tus mediciones
+const int ZONA_FRIA = 225;     // ≥ 225 → Motor apagado
+const int ZONA_TEMPLADA = 210;  // 210-224 → Motor velocidad media
+// Por debajo de 210 → Motor velocidad máxima
 
 // Velocidades PWM (0-255)
 const int VELOCIDAD_APAGADO = 0;
@@ -30,7 +26,7 @@ int zonaActual = 1;
 unsigned long lastSend = 0;
 const unsigned long INTERVALO = 500;  // ms entre lecturas
 
-const char* nombresZonas[] = {"FRÍO", "CALIENTE", "MUY CALIENTE"};
+const char* nombresZonas[] = {"FRÍO", "TEMPLADO", "CALIENTE"};
 
 void setup() {
   // Configurar pines del puente H
@@ -47,6 +43,7 @@ void setup() {
   
   Serial.begin(115200);
   Serial.println("Sistema iniciado - Sensor KY-028");
+  Serial.println("Rangos: ≥225 FRÍO | 210-224 TEMPLADO | <210 CALIENTE");
 }
 
 void loop() {
@@ -56,19 +53,19 @@ void loop() {
     // Leer sensor KY-028
     valorSensor = analogRead(PIN_KY028);
     
-    // Determinar zona y velocidad
-    if (valorSensor >= 683) {
+    // Determinar zona y velocidad según rangos ajustados
+    if (valorSensor >= ZONA_FRIA) {
       // Zona 1: FRÍO → motor apagado
       zonaActual = 1;
       velocidadActual = VELOCIDAD_APAGADO;
     }
-    else if (valorSensor >= 342) {
-      // Zona 2: CALIENTE → motor velocidad media
+    else if (valorSensor >= ZONA_TEMPLADA) {
+      // Zona 2: TEMPLADO → motor velocidad media
       zonaActual = 2;
       velocidadActual = VELOCIDAD_MEDIA;
     }
     else {
-      // Zona 3: MUY CALIENTE → motor velocidad máxima
+      // Zona 3: CALIENTE → motor velocidad máxima
       zonaActual = 3;
       velocidadActual = VELOCIDAD_ALTA;
     }
