@@ -55,7 +55,7 @@ def get_estado():
         return jsonify({"ok": False, "error": "No autorizado"}), 401
 
     resp = send_cmd("GET_STATE")
-    # Se espera "SENSOR:512,ZONA:2,VEL:170"
+    # Se espera "SENSOR:225,ZONA:1,VEL:0"
     try:
         partes = resp.split(",")
         sensor = int(partes[0].split(":")[1])
