@@ -24,11 +24,11 @@ def leer_serial(ser):
             print(f"Serial: {linea}")  # Debug
             
             if linea.startswith("SENSOR:") and ",ZONA:" in linea:
-                # Formato: "SENSOR:512,ZONA:2,VEL:170"
+                # Formato: "SENSOR:225,ZONA:1,VEL:0"
                 partes = linea.split(",")
-                sensor_parte = partes[0]  # "SENSOR:512"
-                zona_parte = partes[1]    # "ZONA:2"
-                vel_parte = partes[2]     # "VEL:170"
+                sensor_parte = partes[0]  # "SENSOR:225"
+                zona_parte = partes[1]    # "ZONA:1"
+                vel_parte = partes[2]     # "VEL:0"
                 
                 with lock:
                     ultimo_sensor = int(sensor_parte[7:])
@@ -79,3 +79,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    5
