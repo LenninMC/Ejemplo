@@ -12,11 +12,11 @@ const zonas = {
 };
 const ultimaActualizacion = document.getElementById('ultima-actualizacion');
 
-// Nombres y acciones
+// Nombres y acciones según nuevos rangos
 const nombresZonas = {
-    1: 'FRÍO (683-1023)',
-    2: 'CALIENTE (342-682)',
-    3: 'MUY CALIENTE (0-341)'
+    1: 'FRÍO (≥ 225)',
+    2: 'TEMPLADO (210-224)',
+    3: 'CALIENTE (< 210)'
 };
 
 const accionesMotor = {
@@ -25,9 +25,9 @@ const accionesMotor = {
     3: 'Motor a VELOCIDAD MÁXIMA (255/255)'
 };
 
-// Límites de zonas
-const LIMITE_ZONA_1 = 683;
-const LIMITE_ZONA_2 = 342;
+// Límites de zonas (ajustados a tus valores)
+const LIMITE_ZONA_1 = 225;   // ≥ 225 = frío
+const LIMITE_ZONA_2 = 210;   // ≥ 210 = templado, < 210 = caliente
 
 // Configuración de la gráfica
 const ctx = document.getElementById('mainChart').getContext('2d');
@@ -48,7 +48,7 @@ let chart = new Chart(ctx, {
                 fill: true
             },
             {
-                label: 'Límite Zona 1-2 (683)',
+                label: 'Límite Zona 1-2 (225)',
                 data: [],
                 borderColor: '#ffaa00',
                 borderWidth: 1,
@@ -58,7 +58,7 @@ let chart = new Chart(ctx, {
                 type: 'line'
             },
             {
-                label: 'Límite Zona 2-3 (342)',
+                label: 'Límite Zona 2-3 (210)',
                 data: [],
                 borderColor: '#ffaa00',
                 borderWidth: 1,
@@ -84,8 +84,8 @@ let chart = new Chart(ctx, {
                         if (label === 'Sensor KY-028') {
                             let estado = '';
                             if (value >= LIMITE_ZONA_1) estado = ' (FRÍO)';
-                            else if (value >= LIMITE_ZONA_2) estado = ' (CALIENTE)';
-                            else estado = ' (MUY CALIENTE)';
+                            else if (value >= LIMITE_ZONA_2) estado = ' (TEMPLADO)';
+                            else estado = ' (CALIENTE)';
                             return label + ': ' + value + estado;
                         }
                         return label + ': ' + value;
@@ -128,8 +128,8 @@ function updateChart(valor) {
     
     chart.data.labels.push(ahora);
     chart.data.datasets[0].data.push(valor);
-    chart.data.datasets[1].data.push(LIMITE_ZONA_1);  // Límite 683
-    chart.data.datasets[2].data.push(LIMITE_ZONA_2);  // Límite 342
+    chart.data.datasets[1].data.push(LIMITE_ZONA_1);  // Límite 225
+    chart.data.datasets[2].data.push(LIMITE_ZONA_2);  // Límite 210
     
     // Mantener últimos 30 puntos
     if (chart.data.labels.length > 30) {
