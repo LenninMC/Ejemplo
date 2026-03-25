@@ -10,32 +10,32 @@ HOST = "0.0.0.0"
 PORT = 5001
 # ----------------------
 
-ultima_temp = 0.0
+ultimo_sensor = 0
 ultima_zona = 1
 ultima_velocidad = 0
 lock = threading.Lock()
 
 def leer_serial(ser):
     """Hilo que lee continuamente del serial y actualiza los valores."""
-    global ultima_temp, ultima_zona, ultima_velocidad
+    global ultimo_sensor, ultima_zona, ultima_velocidad
     while True:
         try:
             linea = ser.readline().decode('utf-8', errors='ignore').strip()
             print(f"Serial: {linea}")  # Debug
             
-            if linea.startswith("TEMP:") and ",ZONA:" in linea:
-                # Formato: "TEMP:25.5,ZONA:2,VEL:170"
+            if linea.startswith("SENSOR:") and ",ZONA:" in linea:
+                # Formato: "SENSOR:512,ZONA:2,VEL:170"
                 partes = linea.split(",")
-                temp_parte = partes[0]  # "TEMP:25.5"
-                zona_parte = partes[1]   # "ZONA:2"
-                vel_parte = partes[2]    # "VEL:170"
+                sensor_parte = partes[0]  # "SENSOR:512"
+                zona_parte = partes[1]    # "ZONA:2"
+                vel_parte = partes[2]     # "VEL:170"
                 
                 with lock:
-                    ultima_temp = float(temp_parte[5:])
+                    ultimo_sensor = int(sensor_parte[7:])
                     ultima_zona = int(zona_parte[5:])
                     ultima_velocidad = int(vel_parte[4:])
                     
-                print(f"Actualizado - Temp: {ultima_temp}°C, Zona: {ultima_zona}, Vel: {ultima_velocidad}")
+                print(f"Actualizado - Sensor: {ultimo_sensor}, Zona: {ultima_zona}, Vel: {ultima_velocidad}")
                     
         except Exception as e:
             print(f"Error serial: {e}")
@@ -72,7 +72,7 @@ def main():
 
                 if cmd == "GET_STATE":
                     with lock:
-                        respuesta = f"TEMP:{ultima_temp},ZONA:{ultima_zona},VEL:{ultima_velocidad}"
+                        respuesta = f"SENSOR:{ultimo_sensor},ZONA:{ultima_zona},VEL:{ultima_velocidad}"
                     conn.sendall((respuesta + "\n").encode("utf-8"))
                 else:
                     conn.sendall(b"ERR:CMD\n")
