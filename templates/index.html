@@ -4,123 +4,473 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control Motor | Sensor KY-028</title>
-    <link rel="stylesheet" href="/static/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', monospace, sans-serif;
+        }
+
+        body {
+            background: #0a0c14;
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Top bar */
+        .top-bar {
+            background: #141820;
+            border-radius: 12px;
+            padding: 15px 25px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2a2f3c;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+            color: #00ff9d;
+        }
+
+        .logo-text {
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1e2430;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid #2f3645;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            box-shadow: 0 0 10px #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #00ff9d;
+        }
+
+        .logout-link {
+            color: #ff6b6b;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #1e2430;
+            border: 1px solid #ff6b6b33;
+            transition: all 0.3s;
+        }
+
+        .logout-link:hover {
+            background: #ff6b6b22;
+            border-color: #ff6b6b;
+        }
+
+        /* Panel izquierdo centrado y más grande */
+        .left-panel {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+        }
+
+        /* Cards */
+        .card {
+            background: #141820;
+            border-radius: 20px;
+            border: 1px solid #2a2f3c;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            background: #1a1f2b;
+            padding: 18px 24px;
+            border-bottom: 1px solid #2a2f3c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8d9db0;
+            letter-spacing: 0.5px;
+        }
+
+        .badge {
+            background: #2a2f3c;
+            color: #00ff9d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid #3a4050;
+        }
+
+        /* Sensor value */
+        .sensor-value {
+            font-size: 72px;
+            font-weight: 300;
+            text-align: center;
+            padding: 30px 20px 15px;
+            color: #00ff9d;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 25px #00ff9d33;
+        }
+
+        .sensor-range {
+            text-align: center;
+            color: #5f6b7a;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        /* Barra de umbral */
+        .threshold-indicator {
+            padding: 0 25px 25px;
+        }
+
+        .threshold-bar {
+            height: 10px;
+            background: #1e2430;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .threshold-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #00ff9d);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .threshold-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #5f6b7a;
+        }
+
+        /* Motor status */
+        .motor-status {
+            padding: 20px 25px;
+        }
+
+        .motor-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 15px;
+        }
+
+        .motor-label {
+            color: #8d9db0;
+            font-size: 14px;
+        }
+
+        .motor-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00ff9d;
+            font-family: 'Courier New', monospace;
+        }
+
+        .motor-unit {
+            color: #5f6b7a;
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        .motor-bar-container {
+            background: #1e2430;
+            border-radius: 12px;
+            height: 24px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .motor-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff9d, #00b8ff);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 12px;
+        }
+
+        /* Zonas */
+        .zona-indicators {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .zona {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: #1a1f2b;
+            border-radius: 12px;
+            font-size: 13px;
+            border: 1px solid #2a2f3c;
+            transition: all 0.3s;
+        }
+
+        .zona.active {
+            background: #00ff9d;
+            color: #141820;
+            border-color: #00ff9d;
+            box-shadow: 0 0 20px #00ff9d;
+            font-weight: bold;
+        }
+
+        .zona small {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* Info grid */
+        .info-grid {
+            padding: 20px 25px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #1e2430;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #5f6b7a;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Gráfica abajo, ancho completo */
+        .chart-full {
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            background: #141820;
+            border-radius: 20px;
+            border: 1px solid #2a2f3c;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .chart-container {
+            padding: 20px;
+            height: 450px;
+        }
+
+        .chart-footer {
+            padding: 15px 25px;
+            border-top: 1px solid #2a2f3c;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #8d9db0;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .legend-color.blue {
+            background: #3b82f6;
+        }
+
+        .legend-color.threshold {
+            background: #ffaa00;
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .sensor-value {
+                font-size: 52px;
+            }
+            .left-panel {
+                padding: 0 15px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard">
+        <!-- Barra superior -->
         <div class="top-bar">
             <div class="logo">
                 <span class="logo-icon">🌡️</span>
                 <span class="logo-text">CONTROL DE TEMPERATURA</span>
             </div>
             <div class="system-status">
-                <span class="status-indicator active"></span>
+                <span class="status-indicator"></span>
                 <span class="status-text">Sistema activo</span>
             </div>
             <a href="/logout" class="logout-link">⏻ Cerrar sesión</a>
         </div>
 
-        <div class="main-content">
-            <div class="left-panel">
-                <!-- Tarjeta del sensor KY-028 -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>🌡️ SENSOR KY-028</h3>
-                        <span class="badge">A0</span>
-                    </div>
-                    <div class="sensor-value" id="sensor-valor">0</div>
-                    <div class="sensor-range">0 — 1023</div>
-                    <div class="threshold-indicator">
-                        <div class="threshold-bar">
-                            <div class="threshold-fill" id="sensor-bar" style="width: 0%"></div>
-                        </div>
-                        <div class="threshold-labels">
-                            <span>Muy caliente</span>
-                            <span>Caliente</span>
-                            <span>Frío</span>
-                        </div>
-                    </div>
+        <!-- Panel izquierdo centrado y más grande -->
+        <div class="left-panel">
+            <!-- Tarjeta del sensor KY-028 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🌡️ SENSOR KY-028</h3>
+                    <span class="badge">A0</span>
                 </div>
-
-                <!-- Tarjeta de estado del motor -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>🔧 ESTADO DEL MOTOR</h3>
-                        <span class="badge">Puente H L298N</span>
+                <div class="sensor-value" id="sensor-valor">0</div>
+                <div class="sensor-range">0 — 1023</div>
+                <div class="threshold-indicator">
+                    <div class="threshold-bar">
+                        <div class="threshold-fill" id="sensor-bar"></div>
                     </div>
-                    <div class="motor-status">
-                        <div class="motor-info">
-                            <span class="motor-label">Velocidad PWM:</span>
-                            <span class="motor-value" id="velocidad-valor">0</span>
-                            <span class="motor-unit">/255</span>
-                        </div>
-                        <div class="motor-bar-container">
-                            <div class="motor-bar" id="motor-bar" style="width: 0%"></div>
-                        </div>
-                        <div class="motor-info">
-                            <span class="motor-label">Zona activa:</span>
-                            <span class="motor-value" id="zona-activa">---</span>
-                        </div>
-                        <div class="zona-indicators">
-                            <div class="zona" id="zona-1">Zona 1<br><small>FRÍO</small><br>≥ 225</div>
-                            <div class="zona" id="zona-2">Zona 2<br><small>TEMPLADO</small><br>210 - 224</div>
-                            <div class="zona" id="zona-3">Zona 3<br><small>CALIENTE</small><br>&lt; 210</div>
-                        </div>
-                        </div>
-                        <div class="motor-info" style="margin-top: 15px;">
-                            <span class="motor-label">Acción:</span>
-                            <span class="motor-value" id="accion-motor">---</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tarjeta de información del sistema -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3>🔌 INFORMACIÓN DEL SISTEMA</h3>
-                    </div>
-                    <div class="info-grid">
-                        <div class="info-row">
-                            <span class="info-label">Última actualización:</span>
-                            <span class="info-value" id="ultima-actualizacion">--:--:--</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Enlace TCP:</span>
-                            <span class="info-value">127.0.0.1:5001</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Puerto serial:</span>
-                            <span class="info-value">/dev/ttyACM0 @ 115200</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Sensor:</span>
-                            <span class="info-value">KY-028 (Termistor NTC)</span>
-                        </div>
+                    <div class="threshold-labels">
+                        <span>Muy caliente</span>
+                        <span>Caliente</span>
+                        <span>Frío</span>
                     </div>
                 </div>
             </div>
 
-            <div class="right-panel">
-                <div class="card chart-card">
-                    <div class="card-header">
-                        <h3>📈 MONITOREO EN TIEMPO REAL</h3>
-                        <div class="chart-controls">
-                            <span class="badge">KY-028</span>
-                            <span class="badge">Actualización 1s</span>
+            <!-- Tarjeta de estado del motor -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🔧 ESTADO DEL MOTOR</h3>
+                    <span class="badge">Puente H L298N</span>
+                </div>
+                <div class="motor-status">
+                    <div class="motor-info">
+                        <span class="motor-label">Velocidad PWM:</span>
+                        <span><span id="velocidad-valor" class="motor-value">0</span><span class="motor-unit">/255</span></span>
+                    </div>
+                    <div class="motor-bar-container">
+                        <div class="motor-bar" id="motor-bar"></div>
+                    </div>
+                    <div class="motor-info">
+                        <span class="motor-label">Zona activa:</span>
+                        <span id="zona-activa" class="motor-value" style="font-size: 18px;">---</span>
+                    </div>
+                    <div class="zona-indicators">
+                        <div class="zona" id="zona-1">Zona 1<br><small>FRÍO</small><br>≥225</div>
+                        <div class="zona" id="zona-2">Zona 2<br><small>TEMPLADO</small><br>210-224</div>
+                        <div class="zona" id="zona-3">Zona 3<br><small>CALIENTE</small><br>&lt;210</div>
+                    </div>
+                    <div class="motor-info" style="margin-top: 15px;">
+                        <span class="motor-label">Acción:</span>
+                        <span id="accion-motor" class="motor-value" style="font-size: 16px;">---</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de información del sistema -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>🔌 INFORMACIÓN DEL SISTEMA</h3>
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <span class="info-label">Última actualización:</span>
+                        <span id="ultima-actualizacion" class="info-value">--:--:--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Enlace TCP:</span>
+                        <span class="info-value">127.0.0.1:5001</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Puerto serial:</span>
+                        <span class="info-value">/dev/ttyACM0 @ 115200</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Sensor:</span>
+                        <span class="info-value">KY-028 (Termistor NTC)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica abajo, ancho completo -->
+        <div class="chart-full">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h3>📈 MONITOREO EN TIEMPO REAL</h3>
+                    <div>
+                        <span class="badge">KY-028</span>
+                        <span class="badge">Actualización 1s</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="chart-footer">
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span class="legend-color blue"></span> Sensor KY-028
                         </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="mainChart"></canvas>
-                    </div>
-                    <div class="chart-footer">
-                        <div class="chart-legend">
-                            <span class="legend-item">
-                                <span class="legend-color blue"></span> Sensor KY-028
-                            </span>
-                            <span class="legend-item">
-                                4<span class="legend-color threshold"></span> Límites de zona
-                            </span>
+                        <div class="legend-item">
+                            <span class="legend-color threshold"></span> Límites de zona (225 y 210)
                         </div>
                     </div>
                 </div>
@@ -128,6 +478,171 @@
         </div>
     </div>
 
-    <script src="/static/js/app.js"></script>
+    <script>
+        // ==================== CONFIGURACIÓN ====================
+        const LIMITE_ZONA_1 = 225;
+        const LIMITE_ZONA_2 = 210;
+
+        const sensorValor = document.getElementById('sensor-valor');
+        const sensorBar = document.getElementById('sensor-bar');
+        const velocidadValor = document.getElementById('velocidad-valor');
+        const motorBar = document.getElementById('motor-bar');
+        const zonaActivaSpan = document.getElementById('zona-activa');
+        const accionMotorSpan = document.getElementById('accion-motor');
+        const zonas = {
+            1: document.getElementById('zona-1'),
+            2: document.getElementById('zona-2'),
+            3: document.getElementById('zona-3')
+        };
+        const ultimaActualizacion = document.getElementById('ultima-actualizacion');
+
+        const nombresZonas = {
+            1: 'FRÍO (≥ 225)',
+            2: 'TEMPLADO (210-224)',
+            3: 'CALIENTE (< 210)'
+        };
+
+        const accionesMotor = {
+            1: 'Motor APAGADO',
+            2: 'Motor VELOCIDAD MEDIA (170/255)',
+            3: 'Motor VELOCIDAD MÁXIMA (255/255)'
+        };
+
+        // ==================== GRÁFICA ====================
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Sensor KY-028',
+                        data: [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Límite Zona 1-2 (225)',
+                        data: [],
+                        borderColor: '#ffaa00',
+                        borderWidth: 2,
+                        borderDash: [6, 6],
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'Límite Zona 2-3 (210)',
+                        data: [],
+                        borderColor: '#ffaa00',
+                        borderWidth: 2,
+                        borderDash: [6, 6],
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                let value = context.raw;
+                                if (label === 'Sensor KY-028') {
+                                    let estado = '';
+                                    if (value >= LIMITE_ZONA_1) estado = ' (FRÍO)';
+                                    else if (value >= LIMITE_ZONA_2) estado = ' (TEMPLADO)';
+                                    else estado = ' (CALIENTE)';
+                                    return label + ': ' + value + estado;
+                                }
+                                return label + ': ' + value;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 1023,
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        ticks: { color: '#8d9db0', stepSize: 200 },
+                        title: { display: true, text: 'Valor sensor (0-1023)', color: '#8d9db0' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#8d9db0', maxRotation: 45, minRotation: 45 }
+                    }
+                }
+            }
+        });
+
+        // ==================== FUNCIONES ====================
+        function actualizarZonas(zona) {
+            Object.values(zonas).forEach(z => {
+                if (z) z.classList.remove('active');
+            });
+            if (zonas[zona]) zonas[zona].classList.add('active');
+            zonaActivaSpan.textContent = nombresZonas[zona] || '---';
+            accionMotorSpan.textContent = accionesMotor[zona] || '---';
+        }
+
+        function updateChart(valor) {
+            const ahora = new Date().toLocaleTimeString();
+            chart.data.labels.push(ahora);
+            chart.data.datasets[0].data.push(valor);
+            chart.data.datasets[1].data.push(LIMITE_ZONA_1);
+            chart.data.datasets[2].data.push(LIMITE_ZONA_2);
+            if (chart.data.labels.length > 30) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+                chart.data.datasets[1].data.shift();
+                chart.data.datasets[2].data.shift();
+            }
+            chart.update();
+        }
+
+        async function fetchEstado() {
+            try {
+                const r = await fetch("/api/estado");
+                const j = await r.json();
+                if (j.ok) {
+                    // Sensor
+                    sensorValor.textContent = j.sensor;
+                    const porcentajeSensor = (j.sensor / 1023) * 100;
+                    sensorBar.style.width = `${porcentajeSensor}%`;
+                    
+                    // Motor
+                    velocidadValor.textContent = j.velocidad;
+                    const porcentajeMotor = (j.velocidad / 255) * 100;
+                    motorBar.style.width = `${porcentajeMotor}%`;
+                    
+                    // Zonas
+                    actualizarZonas(j.zona);
+                    
+                    // Gráfica
+                    updateChart(j.sensor);
+                    
+                    // Timestamp
+                    const ahora = new Date();
+                    ultimaActualizacion.textContent = `${ahora.toLocaleDateString()} ${ahora.toLocaleTimeString()}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        setInterval(fetchEstado, 1000);
+        fetchEstado();
+    </script>
 </body>
 </html>
