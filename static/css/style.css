@@ -1,0 +1,86 @@
+/* Estilos adicionales para el sensor de temperatura */
+.sensor-note {
+    padding: 10px 20px 20px;
+    text-align: center;
+    color: #ffaa00;
+    font-size: 11px;
+    border-top: 1px solid #2a2f3c;
+    margin-top: 10px;
+}
+
+.motor-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.motor-label {
+    color: #8d9db0;
+    font-size: 14px;
+}
+
+.motor-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00ff9d;
+    font-family: 'Courier New', monospace;
+}
+
+.motor-unit {
+    color: #5f6b7a;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.motor-bar-container {
+    background: #1e2430;
+    border-radius: 10px;
+    height: 20px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.motor-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b6b, #ff4444);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.zona-indicators {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.zona {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    background: #1a1f2b;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid #2a2f3c;
+    transition: all 0.3s;
+}
+
+.zona.active {
+    background: #ff6b6b;
+    color: #141820;
+    border-color: #ff6b6b;
+    box-shadow: 0 0 15px #ff6b6b;
+}
+
+.zona small {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.legend-color.red {
+    background: #ff6b6b;
+}
+
+.legend-color.threshold {
+    background: #ffaa00;
+}
