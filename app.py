@@ -50,20 +50,20 @@ def index():
 
 @app.get("/api/estado")
 def get_estado():
-    """Devuelve los últimos valores del sensor de temperatura."""
+    """Devuelve los últimos valores del sensor KY-028."""
     if not is_logged_in():
         return jsonify({"ok": False, "error": "No autorizado"}), 401
 
     resp = send_cmd("GET_STATE")
-    # Se espera "TEMP:25.5,ZONA:2,VEL:170"
+    # Se espera "SENSOR:512,ZONA:2,VEL:170"
     try:
         partes = resp.split(",")
-        temp = float(partes[0].split(":")[1])
+        sensor = int(partes[0].split(":")[1])
         zona = int(partes[1].split(":")[1])
         velocidad = int(partes[2].split(":")[1])
         return jsonify({
             "ok": True,
-            "temperatura": temp,
+            "sensor": sensor,
             "zona": zona,
             "velocidad": velocidad
         })
